@@ -1,0 +1,47 @@
+.report-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px;
+  background: #ffffff;
+}
+
+.report-header h1 {
+  margin-bottom: 6px;
+}
+
+.report-header .meta {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.report-section {
+  margin-top: 32px;
+}
+
+.report-section h2 {
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 6px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.metrics-grid div {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.metrics-grid span {
+  display: block;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.metrics-grid strong {
+  font-size: 20px;
+}

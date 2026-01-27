@@ -1,0 +1,117 @@
+/* ================================
+   GLOBAL THEME VARIABLES
+   ================================ */
+
+:root {
+  /* Typography (from Vite defaults) */
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* Color system */
+  --mint-dark: #1f7a6e;
+  --mint-darker: #155f56;
+  --mint-accent: #2fb9a7;
+  --mint-light: #e6f4f1;
+
+  --bg-white: #ffffff;
+  --border-light: #e5e7eb;
+  --text-dark: #111827;
+
+  color-scheme: light;
+  color: var(--text-dark);
+  background-color: var(--bg-white);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ================================
+   BASE ELEMENTS
+   ================================ */
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-white);
+  color: var(--text-dark);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ================================
+   LINKS
+   ================================ */
+
+a {
+  font-weight: 500;
+  color: var(--mint-accent);
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: var(--mint-dark);
+}
+
+/* ================================
+   HEADINGS
+   ================================ */
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+/* ================================
+   BUTTONS (neutral base)
+   ================================ */
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+
+  background-color: var(--mint-dark);
+  color: white;
+
+  cursor: pointer;
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+button:hover {
+  background-color: var(--mint-darker);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--mint-accent);
+  outline-offset: 2px;
+}
+
+/* ================================
+   LIGHT MODE SAFETY (keep white)
+   ================================ */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: var(--text-dark);
+    background-color: var(--bg-white);
+  }
+
+  a:hover {
+    color: var(--mint-darker);
+  }
+
+  button {
+    background-color: var(--mint-dark);
+  }
+}
