@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import StatusBadge from "../../../components/StatusBadge";
 import DonationTimeline from "../../../components/DonationTimeline";
 import api from "../../../api/api";
+import BackButton from "../../../components/BackButton";
+import Pagination from "../../../components/Pagination";
 import "./DonorHistory.css";
 
 function History() {
@@ -10,25 +12,39 @@ function History() {
   const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const fetchHistory = async (currentPage = 1) => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/donation/history/?page=${currentPage}`);
+      if (res.data.results) {
+        setDonations(res.data.results);
+        setTotalCount(res.data.count);
+      } else {
+        setDonations(res.data);
+        setTotalCount(res.data.length);
+      }
+    } catch (err) {
+      setError("Failed to load donation history");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const res = await api.get("/donation/history/");
-        setDonations(res.data);
-      } catch (err) {
-        setError("Failed to load donation history");
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchHistory(page);
+  }, [page]);
 
-    fetchHistory();
-  }, []);
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Filter donations
-  const filteredDonations = selectedCategory === "all" 
-    ? donations 
+  const filteredDonations = selectedCategory === "all"
+    ? donations
     : donations.filter(d => d.category === selectedCategory);
 
   // Sort donations
@@ -81,9 +97,9 @@ function History() {
     return (
       <div className="history-page">
         <div className="empty-history">
-          <div className="empty-icon">📭</div>
-          <h2>No Donation History</h2>
-          <p>Your completed donations will appear here</p>
+          <div className="empty-icon">📜</div>
+          <h2>Your Impact Story Awaits</h2>
+          <p>Once your donations are completed and delivered, they'll be recorded here as part of your giving journey.</p>
         </div>
       </div>
     );
@@ -91,6 +107,7 @@ function History() {
 
   return (
     <div className="history-page">
+      <BackButton />
       <div className="history-header">
         <h1>Donation History</h1>
         <p className="subtitle">Track all your past donations</p>
@@ -199,6 +216,12 @@ function History() {
           </div>
         ))}
       </div>
+
+      <Pagination
+        currentPage={page}
+        totalPages={Math.ceil(totalCount / 10)}
+        onPageChange={handlePageChange}
+      />
 
       {sortedDonations.length === 0 && (
         <div className="no-matching">

@@ -1,6 +1,7 @@
 import "./AdminReport.css";
 import { useEffect, useState } from "react";
 import api from "../../../api/api";
+import BackButton from "../../../components/BackButton";
 
 const AdminReport = () => {
   const [reports, setReports] = useState([]);
@@ -13,9 +14,11 @@ const AdminReport = () => {
     api
       .get("analytics/reports/")
       .then((res) => {
-        setReports(res.data);
-        if (res.data.length > 0) {
-          setSelectedReport(res.data[0]); // latest
+        // Handle paginated response
+        const reportsList = res.data.results || res.data;
+        setReports(reportsList);
+        if (reportsList.length > 0) {
+          setSelectedReport(reportsList[0]); // latest
         }
       })
       .catch((err) => {
@@ -39,10 +42,22 @@ const AdminReport = () => {
   // 🔹 Export PDF
   const handleExportPDF = () => {
     if (!selectedReport) return;
-    window.open(
-      `${import.meta.env.VITE_API_BASE_URL}/analytics/reports/${selectedReport.id}/pdf/`,
-      "_blank"
-    );
+    api
+      .get(`analytics/reports/${selectedReport.id}/pdf/`, { responseType: "blob" })
+      .then((res) => {
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `${selectedReport.title}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      })
+      .catch((err) => {
+        console.error("Failed to export PDF", err);
+        alert("Failed to export PDF");
+      });
   };
 
   useEffect(() => {
@@ -78,127 +93,130 @@ const AdminReport = () => {
   if (!selectedReport) return null;
 
   return (
-    <div style={{ display: "flex", gap: "24px" }}>
-      {/* REPORT HISTORY */}
-      <aside
-        style={{
-          width: "260px",
-          borderRight: "1px solid #e5e7eb",
-          paddingRight: "16px",
-        }}
-      >
-        <h3 style={{ marginBottom: "12px" }}>Report History</h3>
-
-        {reports.map((r) => (
-          <div
-            key={r.id}
-            onClick={() => setSelectedReport(r)}
-            style={{
-              padding: "10px",
-              marginBottom: "8px",
-              borderRadius: "8px",
-              cursor: "pointer",
-              background:
-                selectedReport.id === r.id ? "#eef2ff" : "transparent",
-            }}
-          >
-            <strong style={{ display: "block", fontSize: "14px" }}>
-              {new Date(r.generated_at).toLocaleDateString()}
-            </strong>
-            <span style={{ fontSize: "12px", color: "#6b7280" }}>
-              {r.status_summary}
-            </span>
-          </div>
-        ))}
-      </aside>
-
-      {/* REPORT VIEW */}
-      <main className="report-container" style={{ flex: 1 }}>
-        {/* ACTION BAR */}
-        <div
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <BackButton />
+      <div style={{ display: "flex", gap: "24px" }}>
+        {/* REPORT HISTORY */}
+        <aside
           style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            marginBottom: "16px",
+            width: "260px",
+            borderRight: "1px solid #e5e7eb",
+            paddingRight: "16px",
           }}
         >
-          <button
-            onClick={handleExportPDF}
+          <h3 style={{ marginBottom: "12px" }}>Report History</h3>
+
+          {reports.map((r) => (
+            <div
+              key={r.id}
+              onClick={() => setSelectedReport(r)}
+              style={{
+                padding: "10px",
+                marginBottom: "8px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                background:
+                  selectedReport.id === r.id ? "#eef2ff" : "transparent",
+              }}
+            >
+              <strong style={{ display: "block", fontSize: "14px" }}>
+                {new Date(r.generated_at).toLocaleDateString()}
+              </strong>
+              <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                {r.status_summary}
+              </span>
+            </div>
+          ))}
+        </aside>
+
+        {/* REPORT VIEW */}
+        <main className="report-container" style={{ flex: 1 }}>
+          {/* ACTION BAR */}
+          <div
             style={{
-              padding: "10px 16px",
-              borderRadius: "8px",
-              border: "1px solid #2563eb",
-              background: "#fff",
-              color: "#2563eb",
-              fontWeight: 500,
-              cursor: "pointer",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "12px",
+              marginBottom: "16px",
             }}
           >
-            Export PDF
-          </button>
+            <button
+              onClick={handleExportPDF}
+              style={{
+                padding: "10px 16px",
+                borderRadius: "8px",
+                border: "1px solid #2563eb",
+                background: "#fff",
+                color: "#2563eb",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Export PDF
+            </button>
 
-          <button
-            onClick={handleGenerateReport}
-            style={{
-              padding: "10px 16px",
-              borderRadius: "8px",
-              border: "none",
-              background: "#2563eb",
-              color: "#fff",
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
-            Generate New Report
-          </button>
-        </div>
-
-        {/* HEADER */}
-        <header className="report-header">
-          <h1>{selectedReport.title}</h1>
-          <p className="meta">
-            Generated on{" "}
-            {new Date(selectedReport.generated_at).toLocaleDateString()} •
-            Generated by {selectedReport.generated_by}
-          </p>
-        </header>
-
-        {/* EXECUTIVE SUMMARY */}
-        <section className="report-section">
-          <h2>Executive Summary</h2>
-          <p>{selectedReport.executive_summary}</p>
-        </section>
-
-        {/* KEY METRICS */}
-        <section className="report-section">
-          <h2>Key Metrics</h2>
-          <div className="metrics-grid">
-            <div>
-              <span>Total Donations</span>
-              <strong>{selectedReport.total_donations}</strong>
-            </div>
-            <div>
-              <span>Total Requests</span>
-              <strong>{selectedReport.total_requests}</strong>
-            </div>
-            <div>
-              <span>Donation–Request Ratio</span>
-              <strong>{selectedReport.donation_request_ratio}</strong>
-            </div>
-            <div>
-              <span>Status</span>
-              <strong>{selectedReport.status_summary}</strong>
-            </div>
+            <button
+              onClick={handleGenerateReport}
+              style={{
+                padding: "10px 16px",
+                borderRadius: "8px",
+                border: "none",
+                background: "#2563eb",
+                color: "#fff",
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Generate New Report
+            </button>
           </div>
-        </section>
 
-        {/* SYSTEM CONCLUSION */}
-        <section className="report-section">
-          <h2>System Conclusion</h2>
-          <p>{selectedReport.system_conclusion}</p>
-        </section>
-      </main>
+          {/* HEADER */}
+          <header className="report-header">
+            <h1>{selectedReport.title}</h1>
+            <p className="meta">
+              Generated on{" "}
+              {new Date(selectedReport.generated_at).toLocaleDateString()} •
+              Generated by {selectedReport.generated_by}
+            </p>
+          </header>
+
+          {/* EXECUTIVE SUMMARY */}
+          <section className="report-section">
+            <h2>Executive Summary</h2>
+            <p>{selectedReport.executive_summary}</p>
+          </section>
+
+          {/* KEY METRICS */}
+          <section className="report-section">
+            <h2>Key Metrics</h2>
+            <div className="metrics-grid">
+              <div>
+                <span>Total Donations</span>
+                <strong>{selectedReport.total_donations}</strong>
+              </div>
+              <div>
+                <span>Total Requests</span>
+                <strong>{selectedReport.total_requests}</strong>
+              </div>
+              <div>
+                <span>Donation–Request Ratio</span>
+                <strong>{selectedReport.donation_request_ratio}</strong>
+              </div>
+              <div>
+                <span>Status</span>
+                <strong>{selectedReport.status_summary}</strong>
+              </div>
+            </div>
+          </section>
+
+          {/* SYSTEM CONCLUSION */}
+          <section className="report-section">
+            <h2>System Conclusion</h2>
+            <p>{selectedReport.system_conclusion}</p>
+          </section>
+        </main>
+      </div>
     </div>
   );
 };

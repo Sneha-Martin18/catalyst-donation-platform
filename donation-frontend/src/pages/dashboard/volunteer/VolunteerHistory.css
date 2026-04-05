@@ -109,6 +109,7 @@
     opacity: 0;
     max-height: 0;
   }
+
   to {
     opacity: 1;
     max-height: 1000px;
@@ -176,7 +177,7 @@
   color: #004085;
 }
 
-.status-picked {
+.status-picked_up {
   background-color: #d1ecf1;
   color: #0c5460;
 }
@@ -186,8 +187,8 @@
   color: #155724;
 }
 
-.status-failed {
-  background-color: #f8d7da;
+.status-canceled {
+  background-color: #f8dede;
   color: #721c24;
 }
 
@@ -243,7 +244,7 @@
   color: #004085;
 }
 
-.badge.picked {
+.badge.picked_up {
   background-color: #d1ecf1;
   color: #0c5460;
 }
@@ -253,8 +254,8 @@
   color: #155724;
 }
 
-.badge.failed {
-  background-color: #f8d7da;
+.badge.canceled {
+  background-color: #f8dede;
   color: #721c24;
 }
 
@@ -290,4 +291,3 @@
     grid-template-columns: 1fr;
   }
 }
-

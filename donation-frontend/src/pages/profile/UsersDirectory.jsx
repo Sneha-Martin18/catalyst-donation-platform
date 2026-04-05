@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/api";
+import BackButton from "../../components/BackButton";
 import UserCard from "./UserCard";
 import "./Profile.css";
 
@@ -54,6 +55,7 @@ function UsersDirectory() {
 
   return (
     <div className="profile-container">
+      <BackButton />
       <h1 className="directory-title">Users Directory</h1>
 
       {/* Filter Section */}

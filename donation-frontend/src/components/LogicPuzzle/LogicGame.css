@@ -1,0 +1,224 @@
+/* Floating Button */
+.logic-game-fab {
+    position: fixed;
+    bottom: 100px;
+    /* Above standard chat widgets (usually ~20-80px) */
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--mint-dark, #1f7a6e);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    z-index: 1000;
+    /* High z-index to be above other elements */
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+    font-size: 24px;
+}
+
+.logic-game-fab:hover {
+    background-color: var(--mint-darker, #155f56);
+    transform: scale(1.1);
+}
+
+.logic-game-fab.hidden {
+    transform: scale(0);
+}
+
+/* Modal Overlay */
+.logic-modal-overlay {
+    position: fixed;
+    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+    /* Very high to cover sidebar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: logic-fade-in 0.3s ease-out;
+}
+
+/* Modal Content (Card) */
+.logic-modal-card {
+    background: white;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: logic-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.logic-modal-header {
+    background-color: var(--mint-dark, #1f7a6e);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.logic-modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+}
+
+.logic-close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.logic-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.logic-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* Animation Keyframes */
+@keyframes logic-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes logic-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Utility Classes for Levels */
+.logic-level-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark, #111827);
+}
+
+.logic-level-desc {
+    margin-bottom: 1.5rem;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.logic-grid-opts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.logic-opt-btn {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: #374151;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logic-opt-btn:hover:not(:disabled) {
+    border-color: var(--mint-accent, #2fb9a7);
+    background: var(--mint-light, #e6f4f1);
+}
+
+.logic-opt-btn.selected {
+    border-color: var(--mint-dark, #1f7a6e);
+    background-color: var(--mint-light, #e6f4f1);
+    color: var(--mint-dark, #1f7a6e);
+}
+
+.logic-opt-btn.correct {
+    border-color: #22c55e;
+    background-color: #f0fdf4;
+    color: #15803d;
+}
+
+.logic-opt-btn.wrong {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+    color: #b91c1c;
+}
+
+.logic-action-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--mint-dark, #1f7a6e);
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.logic-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.logic-sequence-display {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    font-family: monospace;
+    background-color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.logic-feedback {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.logic-feedback.error {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.logic-feedback.success {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}

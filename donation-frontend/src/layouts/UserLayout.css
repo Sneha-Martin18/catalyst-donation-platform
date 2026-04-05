@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+.user-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafc;
+    /* Matches landing page subtle bg */
+    font-family: 'Outfit', sans-serif;
+}
+
+/* SIDEBAR - Professional Light Theme */
+.user-sidebar {
+    width: 280px;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 30px 20px;
+    border-right: 1.5px solid #edf2f7;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    font-size: 1.5rem;
+}
+
+.logo-text {
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: #1f7a6e;
+    letter-spacing: -1px;
+}
+
+.sidebar-tag {
+    margin: 8px 0 0 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #82b440;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-section {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-section-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    margin: 10px 0 10px 12px;
+    font-weight: 800;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    margin: 2px 0;
+    color: #475569 !important;
+    /* Explicitly set dark grey for inactive */
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    background-color: #f1f8f7;
+    color: #1f7a6e !important;
+    transform: translateX(4px);
+}
+
+.nav-link.active {
+    background: linear-gradient(135deg, #1f7a6e 0%, #2fb9a7 100%) !important;
+    color: white !important;
+    /* High contrast white for active */
+    box-shadow: 0 4px 12px rgba(31, 122, 110, 0.2);
+}
+
+/* Force all spans inside links to use the link's color */
+.nav-link span {
+    color: inherit;
+    display: inline-block;
+}
+
+.nav-link .icon {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    min-width: 28px;
+}
+
+.logout-btn {
+    margin-top: 15px;
+    color: #ef4444;
+}
+
+.logout-btn:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+/* MAIN CONTENT */
+.user-main {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+    background-color: #f8fafc;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .user-sidebar {
+        width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .user-layout {
+        flex-direction: column;
+    }
+
+    .user-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 20px;
+        border-right: none;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .user-main {
+        padding: 24px;
+    }
+}
+
+/* Custom Scrollbar */
+.user-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.user-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.user-sidebar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}

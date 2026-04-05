@@ -9,13 +9,10 @@ function AdminHome() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalUsers: 0,
-    activeDonors: 0,
-    activeReceivers: 0,
     pendingApprovals: 0,
     totalDeliveries: 0,
     completedDeliveries: 0,
   });
-  const [recentActivities, setRecentActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,13 +29,7 @@ function AdminHome() {
       const donationsRes = await api.get("donation/");
       const donations = donationsRes.data || [];
 
-      const activeDonors = users.filter(
-        (u) => u.role === "donor" && u.is_active
-      ).length;
 
-      const activeReceivers = users.filter(
-        (u) => u.role === "receiver" && u.is_active
-      ).length;
 
       const pendingDonations = donations.filter(
         (d) => d.status === "pending"
@@ -46,16 +37,15 @@ function AdminHome() {
 
       setStats({
         totalUsers: users.length,
-        activeDonors,
-        activeReceivers,
+
         pendingApprovals: pendingDonations,
         totalDeliveries: donations.length,
         completedDeliveries: donations.filter(
-          (d) => d.status === "delivered"
+          (d) => d.status === "delivered" || d.status === "completed"
         ).length,
       });
 
-      setRecentActivities(donations.slice(-5).reverse());
+      // setRecentActivities(donations.slice(-5).reverse());
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
     } finally {
@@ -89,21 +79,7 @@ function AdminHome() {
           </div>
         </div>
 
-        <div className="stat-card donors">
-          <div className="stat-icon">🎁</div>
-          <div className="stat-content">
-            <h3>{stats.activeDonors}</h3>
-            <p>Active Donors</p>
-          </div>
-        </div>
 
-        <div className="stat-card receivers">
-          <div className="stat-icon">🙏</div>
-          <div className="stat-content">
-            <h3>{stats.activeReceivers}</h3>
-            <p>Active Receivers</p>
-          </div>
-        </div>
 
         <div className="stat-card pending">
           <div className="stat-icon">⏳</div>
@@ -164,34 +140,6 @@ function AdminHome() {
             🔄 Refresh Data
           </button>
         </div>
-      </div>
-
-      {/* RECENT ACTIVITIES */}
-      <div className="section">
-        <h2>Recent Activities</h2>
-        {recentActivities.length > 0 ? (
-          <div className="activity-list">
-            {recentActivities.map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-icon">📦</div>
-                <div className="activity-content">
-                  <p className="activity-title">{activity.item_name}</p>
-                  <p className="activity-meta">
-                    Quantity: {activity.quantity} | Category:{" "}
-                    {activity.category}
-                  </p>
-                </div>
-                <div className="activity-status">
-                  <span className={`status-badge status-${activity.status}`}>
-                    {activity.status.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="empty-state">No recent activities</p>
-        )}
       </div>
 
       {/* SYSTEM INFO */}

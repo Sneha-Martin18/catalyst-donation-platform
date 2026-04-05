@@ -1,6 +1,6 @@
 import "./Profile.css";
 
-function ProfileCard({ profile, onEditClick }) {
+function ProfileCard({ profile, stats, onEditClick, children }) {
   const getRoleEmoji = (role) => {
     const emojiMap = {
       admin: "👨‍💼",
@@ -11,94 +11,97 @@ function ProfileCard({ profile, onEditClick }) {
     return emojiMap[role] || "👤";
   };
 
+  // Default banner images based on role
+  const getBannerImage = (role) => {
+    switch (role) {
+      case 'volunteer':
+        return "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"; // Crowd/Hands
+      case 'donor':
+        return "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"; // Gift/Charity
+      case 'receiver':
+        return "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"; // Hope/Support
+      default:
+        return "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"; // Gradient
+    }
+  };
+
   return (
-    <div className="profile-card">
-      <div className="profile-header">
-        <div className="profile-avatar">
-          {profile.profile_picture ? (
-            <img 
-              src={profile.profile_picture} 
-              alt="Profile" 
-              className="avatar-image"
-            />
-          ) : (
-            <span className="avatar-emoji">{getRoleEmoji(profile.role)}</span>
-          )}
-        </div>
-        <div className="profile-info">
-          <h1>
-            {profile.first_name || profile.username} {profile.last_name || ""}
-          </h1>
-          <p className="role-badge">{profile.role.toUpperCase()}</p>
-          {profile.volunteer_code && (
-            <p className="volunteer-code">{profile.volunteer_code}</p>
-          )}
-          {profile.email && <p className="email">{profile.email}</p>}
-        </div>
+    <div className="profile-card-container">
+      {/* Banner Section */}
+      <div
+        className="profile-banner"
+        style={{ backgroundImage: `url(${getBannerImage(profile.role)})` }}
+      >
         {onEditClick && (
-          <button onClick={onEditClick} className="btn-edit">
-            ✎ Edit Profile
+          <button onClick={onEditClick} className="btn-edit-round" title="Edit Profile">
+            ✎
           </button>
         )}
       </div>
 
-      <div className="profile-details">
-        {profile.first_name && (
-          <div className="detail-row">
-            <span className="label">First Name:</span>
-            <span className="value">{profile.first_name}</span>
+      {/* Profile Content */}
+      <div className="profile-content">
+        {/* Avatar */}
+        <div className="profile-avatar-wrapper">
+          <div className="profile-avatar">
+            {profile.profile_picture ? (
+              <img
+                src={profile.profile_picture}
+                alt="Profile"
+                className="avatar-image"
+              />
+            ) : (
+              <span className="avatar-emoji">{getRoleEmoji(profile.role)}</span>
+            )}
           </div>
-        )}
-
-        {profile.last_name && (
-          <div className="detail-row">
-            <span className="label">Last Name:</span>
-            <span className="value">{profile.last_name}</span>
-          </div>
-        )}
-
-        <div className="detail-row">
-          <span className="label">Email:</span>
-          <span className="value">{profile.email || "Not provided"}</span>
         </div>
 
-        {profile.phone_number && (
-          <div className="detail-row">
-            <span className="label">Phone:</span>
-            <span className="value">{profile.phone_number}</span>
+        {/* User Info */}
+        <div className="profile-text">
+          <h1 className="profile-name">
+            {profile.first_name || profile.username || "User"} {profile.last_name || ""}
+          </h1>
+          <p className="profile-role">
+            {profile.role === 'volunteer' ? 'Community Volunteer' :
+              profile.role === 'donor' ? 'Generous Donor' :
+                profile.role === 'receiver' ? 'Community Member' :
+                  profile.role.toUpperCase()}
+          </p>
+          <p className="profile-bio">
+            {profile.email}
+            {profile.volunteer_code && <span> • {profile.volunteer_code}</span>}
+          </p>
+
+          <div className="profile-tags">
+            {profile.address && (
+              <span className="tag location">📍 {profile.address}</span>
+            )}
+            {/* Display Volunteer Rating if role is volunteer or if rating exists */}
+            {(profile.role === 'volunteer' || profile.rating > 0) && (
+              <span className="tag rating">⭐ {profile.rating?.toFixed(1) || "0.0"} Rating</span>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        {stats && stats.length > 0 && (
+          <div className="profile-stats-card">
+            {stats.map((stat, index) => (
+              <div key={index} className="stat-item">
+                <span className="stat-value">{stat.value}</span>
+                <span className="stat-label">{stat.label}</span>
+              </div>
+            ))}
           </div>
         )}
 
-        {profile.address && (
-          <div className="detail-row">
-            <span className="label">Address:</span>
-            <span className="value">{profile.address}</span>
+        {/* Custom Dashboard Content */}
+        {children && (
+          <div className="profile-dashboard-content">
+            {children}
           </div>
         )}
 
-        {profile.date_of_birth && (
-          <div className="detail-row">
-            <span className="label">Date of Birth:</span>
-            <span className="value">{profile.date_of_birth}</span>
-          </div>
-        )}
-
-        {profile.rating !== undefined && profile.rating > 0 && (
-          <div className="detail-row">
-            <span className="label">Rating:</span>
-            <span className="value rating">
-              {"⭐".repeat(Math.floor(profile.rating))} (
-              {profile.rating.toFixed(1)})
-            </span>
-          </div>
-        )}
-
-        {profile.aadhaar_verified && (
-          <div className="detail-row">
-            <span className="label">Aadhaar Status:</span>
-            <span className="value verified">✓ Verified</span>
-          </div>
-        )}
       </div>
     </div>
   );

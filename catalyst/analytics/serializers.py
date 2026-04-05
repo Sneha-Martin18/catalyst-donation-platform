@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from analytics.models import AnalyticsReport
+from analytics.models import AnalyticsReport, DemandPrediction
 
 
 class AnalyticsReportSerializer(serializers.ModelSerializer):
@@ -7,4 +7,10 @@ class AnalyticsReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnalyticsReport
+        fields = "__all__"
+
+
+class DemandPredictionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DemandPrediction
         fields = "__all__"

@@ -4,20 +4,24 @@ import random
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.db import transaction
+from django.core.mail import send_mail
+from django.conf import settings
 
 from .serializers import (
     UserRegistrationSerializer,
     UserSerializer,
 )
 from .permissions import IsAdmin
-from .models import AadhaaarOTP, UserProfile
+from .models import EmailOTP, UserProfile
 
 User = get_user_model()
 
 # =========================
-# USER REGISTRATION
+# USER REGISTRATION        
 # =========================
 
 class RegisterUserView(APIView):
@@ -40,7 +44,14 @@ class AdminUserListView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        users = User.objects.all()
+        users = User.objects.all().order_by('-date_joined')
+        
+        paginator = PageNumberPagination()
+        page = paginator.paginate_queryset(users, request)
+        if page is not None:
+            serializer = UserSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -53,29 +64,20 @@ class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-
-        return Response(
-            {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-                "first_name": request.user.first_name,
-                "last_name": request.user.last_name,
-                "role": request.user.role,
-                "date_of_birth": request.user.date_of_birth,
-                "volunteer_code": request.user.volunteer_code,
-
-                # PROFILE DATA
-                "address": profile.address,
-                "phone_number": profile.phone_number,
-                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
-                "rating": profile.rating,
-                "aadhaar_last4": profile.aadhaar_last4,
-                "aadhaar_verified": profile.aadhaar_verified,
-            },
-            status=status.HTTP_200_OK,
-        )
+        # Ensure profile exists
+        UserProfile.objects.get_or_create(user=request.user)
+        
+        serializer = UserSerializer(request.user)
+        data = serializer.data
+        
+        # Flatten profile data into root object to match frontend flattened expectation
+        profile_data = data.pop('profile', {})
+        if profile_data:
+            # We want to keep is_verified from the serialized output (which comes from SerializerMethodField)
+            # but address, phone_number, etc. from profile_data
+            data.update(profile_data)
+            
+        return Response(data, status=status.HTTP_200_OK)
 
     def put(self, request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
@@ -100,73 +102,78 @@ class UserProfileView(APIView):
 
         profile.save()
 
-        # Return updated profile
-        return Response(
-            {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-                "first_name": request.user.first_name,
-                "last_name": request.user.last_name,
-                "role": request.user.role,
-                "date_of_birth": request.user.date_of_birth,
-                "volunteer_code": request.user.volunteer_code,
-                "address": profile.address,
-                "phone_number": profile.phone_number,
-                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
-                "rating": profile.rating,
-                "aadhaar_last4": profile.aadhaar_last4,
-                "aadhaar_verified": profile.aadhaar_verified,
-            },
-            status=status.HTTP_200_OK,
-        )
+        # Use serializer for consistent and flattened response
+        serializer = UserSerializer(request.user)
+        data = serializer.data
+        
+        profile_data = data.pop('profile', {})
+        if profile_data:
+            data.update(profile_data)
+            
+        return Response(data, status=status.HTTP_200_OK)
 
 
 # =========================
-# AADHAAR OTP GENERATION
+# EMAIL OTP GENERATION
 # =========================
 
-class GenerateAadhaarOTPView(APIView):
+class GenerateEmailOTPView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request):
-        aadhaar_last4 = request.data.get("aadhaar_last4")
+        email = request.data.get("email")
 
-        if not aadhaar_last4 or len(aadhaar_last4) != 4 or not aadhaar_last4.isdigit():
+        if not email:
             return Response(
-                {"error": "Invalid Aadhaar last 4 digits"},
+                {"error": "Email is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Create profile if not exists
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
         # Remove old OTPs
-        AadhaaarOTP.objects.filter(user=request.user).delete()
+        EmailOTP.objects.filter(user=request.user).delete()
 
-        profile.aadhaar_last4 = aadhaar_last4
-        profile.aadhaar_verified = False
+        # Update profile state
+        profile.is_verified = False
         profile.save()
 
+        # Generate new OTP
         otp = str(random.randint(100000, 999999))
-        AadhaaarOTP.objects.create(user=request.user, otp=otp)
+        EmailOTP.objects.create(user=request.user, otp=otp)
 
-        print(f"[MOCK UIDAI OTP] OTP for {request.user.username}: {otp}")
+        # SEND ACTUAL EMAIL
+        subject = "Your Catalyst Verification Code"
+        message = f"Hello {request.user.username},\n\nYour 6-digit verification code is: {otp}\n\nThis code is valid for 10 minutes."
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [email]
+
+        try:
+            send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+            print(f"[SUCCESS] OTP email sent to {email}")
+        except Exception as e:
+            print(f"[ERROR] Failed to send email: {str(e)}")
+            # In development, we still want to see it in console if email fails
+            print(f"[FALLBACK] OTP for {email}: {otp}")
 
         return Response(
-            {"message": "OTP sent successfully", "otp": otp},
+            {"message": "OTP has been sent to your email address."},
             status=status.HTTP_200_OK,
         )
 
 
 # =========================
-# AADHAAR OTP VERIFICATION
+# EMAIL OTP VERIFICATION
 # =========================
 
-class AadhaarVerifyOTPView(APIView):
+class EmailVerifyOTPView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request):
-        otp_entered = request.data.get("otp")
+        otp_entered = str(request.data.get("otp", "")).strip()
 
         if not otp_entered:
             return Response(
@@ -174,39 +181,47 @@ class AadhaarVerifyOTPView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Fetch latest OTP
         record = (
-            AadhaaarOTP.objects.filter(user=request.user)
+            EmailOTP.objects.filter(user=request.user)
             .order_by("-created_at")
             .first()
         )
 
         if not record:
             return Response(
-                {"error": "OTP not found"},
+                {"error": "No active OTP found. Please request a new OTP."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if record.is_expired():
             record.delete()
             return Response(
-                {"error": "OTP expired"},
+                {"error": "OTP has expired. Please request a new one."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if record.otp != otp_entered:
             return Response(
-                {"error": "Incorrect OTP"},
+                {"error": "Incorrect OTP. Please try again."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        profile = request.user.profile
-        profile.aadhaar_verified = True
+        # Mark Verified
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile.is_verified = True
         profile.save()
+        
+        user = request.user
+        user.is_verified = True
+        user.is_active = True
+        user.save()
 
+        # Cleanup
         record.delete()
 
         return Response(
-            {"message": "Aadhaar verified successfully"},
+            {"message": "Email verified successfully"},
             status=status.HTTP_200_OK,
         )
 
@@ -243,6 +258,33 @@ class AdminToggleUserStatusView(APIView):
                 "is_active": user.is_active,
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class AdminDeleteUserView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdmin]
+
+    def delete(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if user.id == request.user.id:
+            return Response(
+                {"detail": "Admin cannot delete themselves"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.delete()
+
+        return Response(
+            {"detail": "User deleted successfully"},
+            status=status.HTTP_204_NO_CONTENT,
         )
 
 

@@ -1,58 +1,73 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import "./VolunteerLayout.css";
 
 function VolunteerLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path) => {
     if (path === "" && location.pathname === "/dashboard/volunteer") return true;
     return location.pathname.includes(path) && path !== "";
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("role");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="volunteer-layout">
-      
-      {/* SIDEBAR */}
       <aside className="volunteer-sidebar">
+        {/* HEADER */}
         <div className="sidebar-header">
           <h3>🤝 Volunteer</h3>
           <p>Delivery Partner</p>
         </div>
 
+        {/* NAV */}
         <nav className="sidebar-nav">
-          <Link 
-            to="" 
+          <Link
+            to=""
             className={`nav-link ${isActive("") ? "active" : ""}`}
           >
-            <span className="icon">📊</span>
-            <span>Dashboard</span>
+            📊 Dashboard
           </Link>
-          <Link 
-            to="tasks" 
+
+          <Link
+            to="profile"
+            className={`nav-link ${isActive("profile") ? "active" : ""}`}
+          >
+            👤 Profile
+          </Link>
+
+          <Link
+            to="tasks"
             className={`nav-link ${isActive("tasks") ? "active" : ""}`}
           >
-            <span className="icon">📋</span>
-            <span>All Tasks</span>
+            📋 All Tasks
           </Link>
-          <Link 
-            to="history" 
+
+          <Link
+            to="history"
             className={`nav-link ${isActive("history") ? "active" : ""}`}
           >
-            <span className="icon">📜</span>
-            <span>History</span>
+            📜 History
           </Link>
         </nav>
 
+        {/* FOOTER + LOGOUT */}
         <div className="sidebar-footer">
-          <p className="help-text">Need help? Contact support</p>
+          <button className="logout-btn" onClick={handleLogout}>
+            🚪 Logout
+          </button>
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
       <main className="volunteer-main">
         <Outlet />
       </main>
-
     </div>
   );
 }

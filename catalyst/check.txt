@@ -1,0 +1,7 @@
+SystemCheckError: System check identified some issues:
+
+ERRORS:
+?: (daphne.E001) Daphne must be listed before django.contrib.staticfiles in INSTALLED_APPS.
+
+System check identified 1 issue (0 silenced).
+[EMAIL] Using SMTP Backend (martinsneha72@gmail.com)

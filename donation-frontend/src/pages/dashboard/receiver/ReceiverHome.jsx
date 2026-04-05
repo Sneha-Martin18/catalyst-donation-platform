@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../api/api";
+import RecommendationEngine from "../../../components/Recommendations/RecommendationEngine";
 import "./ReceiverHome.css";
 
 function ReceiverHome() {
@@ -21,7 +22,7 @@ function ReceiverHome() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch requests
       const requestsRes = await api.get("receiver/requests/");
       const requests = requestsRes.data;
@@ -102,16 +103,20 @@ function ReceiverHome() {
           <Link to="create" className="action-btn btn-primary">
             📝 Create New Request
           </Link>
-          <Link to="browse-donations" className="action-btn btn-secondary">
+          <Link to="browse" className="action-btn btn-secondary">
             🎁 Browse Donations
           </Link>
-          <Link to="requests" className="action-btn btn-info">
+          <Link to="my-requests" className="action-btn btn-info">
             📋 View All Requests
           </Link>
           <Link to="my-orders" className="action-btn btn-success">
             📦 View Orders
           </Link>
         </div>
+
+        <section className="dashboard-recommendations">
+          <RecommendationEngine />
+        </section>
       </div>
 
       {/* Recent Requests */}
@@ -180,7 +185,7 @@ function ReceiverHome() {
             </table>
           </div>
         ) : (
-          <p className="empty-state">No orders yet. <Link to="browse-donations">Browse donations</Link></p>
+          <p className="empty-state">No orders yet. <Link to="browse">Browse donations</Link></p>
         )}
       </div>
     </div>

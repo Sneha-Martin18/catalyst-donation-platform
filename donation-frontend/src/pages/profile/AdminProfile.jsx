@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/api";
+import ProfileCard from "./ProfileCard";
 
 function AdminProfile({ profile, onEditClick }) {
   const [stats, setStats] = useState({
@@ -16,9 +17,9 @@ function AdminProfile({ profile, onEditClick }) {
     const fetchStats = async () => {
       try {
         // Fetch admin dashboard stats
-        const usersRes = await api.get("/users/all-users/");
-        const donationsRes = await api.get("/donations/all-donations/");
-        const requestsRes = await api.get("/receiver/all-requests/");
+        const usersRes = await api.get("/users/admin/users/");
+        const donationsRes = await api.get("/donation/all/");
+        const requestsRes = await api.get("/receiver/staff/item-requests/");
 
         const users = usersRes.data || [];
         const donors = users.filter((u) => u.role === "donor").length;
@@ -35,6 +36,7 @@ function AdminProfile({ profile, onEditClick }) {
         });
       } catch (err) {
         console.error("Failed to load admin stats", err);
+        // Fallback or empty stats
       } finally {
         setLoading(false);
       }
@@ -45,76 +47,84 @@ function AdminProfile({ profile, onEditClick }) {
 
   return (
     <div className="role-profile admin-profile">
-      <h2>Admin Control Center</h2>
+      {/* Profile Card with Dashboard Content */}
+      <div className="profile-card-section">
+        <ProfileCard
+          profile={profile}
+          onEditClick={onEditClick}
+        >
+          <h3 className="section-title">Admin Dashboard</h3>
 
-      {/* System Statistics */}
-      <div className="admin-stats-grid">
-        <div className="admin-stat-card users">
-          <span className="stat-icon">👥</span>
-          <p className="stat-number">{stats.total_users}</p>
-          <p className="stat-label">Total Users</p>
-          <div className="stat-breakdown">
-            <small>👤 Receivers: {stats.receivers}</small>
-            <small>🎁 Donors: {stats.donors}</small>
-            <small>👥 Volunteers: {stats.volunteers}</small>
+          {/* System Statistics */}
+          <div className="admin-stats-grid">
+            <div className="admin-stat-card users">
+              <span className="stat-icon">👥</span>
+              <p className="stat-number">{stats.total_users}</p>
+              <p className="stat-label">Total Users</p>
+              <div className="stat-breakdown">
+                <small>👤 Receivers: {stats.receivers}</small>
+                <small>🎁 Donors: {stats.donors}</small>
+                <small>👥 Volunteers: {stats.volunteers}</small>
+              </div>
+            </div>
+
+            <div className="admin-stat-card donations">
+              <span className="stat-icon">📦</span>
+              <p className="stat-number">{stats.total_donations}</p>
+              <p className="stat-label">Total Donations</p>
+            </div>
+
+            <div className="admin-stat-card requests">
+              <span className="stat-icon">📋</span>
+              <p className="stat-number">{stats.total_requests}</p>
+              <p className="stat-label">Total Requests</p>
+            </div>
+
+            <div className="admin-stat-card system">
+              <span className="stat-icon">⚙️</span>
+              <p className="stat-number">Active</p>
+              <p className="stat-label">System Status</p>
+            </div>
           </div>
-        </div>
 
-        <div className="admin-stat-card donations">
-          <span className="stat-icon">📦</span>
-          <p className="stat-number">{stats.total_donations}</p>
-          <p className="stat-label">Total Donations</p>
-        </div>
-
-        <div className="admin-stat-card requests">
-          <span className="stat-icon">📋</span>
-          <p className="stat-number">{stats.total_requests}</p>
-          <p className="stat-label">Total Requests</p>
-        </div>
-
-        <div className="admin-stat-card system">
-          <span className="stat-icon">⚙️</span>
-          <p className="stat-number">Active</p>
-          <p className="stat-label">System Status</p>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="admin-actions">
-        <h3>Quick Actions</h3>
-        <div className="actions-grid">
-          <div className="action-card">
-            <span className="action-icon">👥</span>
-            <p>Manage Users</p>
+          {/* Quick Actions */}
+          <div className="admin-actions">
+            <h3>Quick Actions</h3>
+            <div className="actions-grid">
+              <div className="action-card">
+                <span className="action-icon">👥</span>
+                <p>Manage Users</p>
+              </div>
+              <div className="action-card">
+                <span className="action-icon">✓</span>
+                <p>Approve Donations</p>
+              </div>
+              <div className="action-card">
+                <span className="action-icon">📊</span>
+                <p>View Reports</p>
+              </div>
+              <div className="action-card">
+                <span className="action-icon">⚙️</span>
+                <p>System Settings</p>
+              </div>
+            </div>
           </div>
-          <div className="action-card">
-            <span className="action-icon">✓</span>
-            <p>Approve Donations</p>
-          </div>
-          <div className="action-card">
-            <span className="action-icon">📊</span>
-            <p>View Reports</p>
-          </div>
-          <div className="action-card">
-            <span className="action-icon">⚙️</span>
-            <p>System Settings</p>
-          </div>
-        </div>
-      </div>
 
-      {/* Admin Notes */}
-      <div className="admin-notes">
-        <h3>System Information</h3>
-        <p>
-          <strong>Role:</strong> Administrator
-        </p>
-        <p>
-          <strong>Access Level:</strong> Full System Access
-        </p>
-        <p>
-          <strong>Responsibilities:</strong> User management, donation approval,
-          request verification, and system monitoring
-        </p>
+          {/* Admin Notes */}
+          <div className="admin-notes">
+            <h3>System Information</h3>
+            <p>
+              <strong>Role:</strong> Administrator
+            </p>
+            <p>
+              <strong>Access Level:</strong> Full System Access
+            </p>
+            <p>
+              <strong>Responsibilities:</strong> User management, donation approval,
+              request verification, and system monitoring
+            </p>
+          </div>
+        </ProfileCard>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../api/axios.js";
+import api from "../api/api.js";
 import "./Register.css";
 
 function Register() {
@@ -11,13 +11,22 @@ function Register() {
     email: "",
     password: "",
     password2: "",
-    role: "",
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
+
+  // REDIRECT IF ALREADY LOGGED IN
+  useEffect(() => {
+    const token = localStorage.getItem("access");
+    const role = localStorage.getItem("role");
+
+    if (token && role) {
+      navigate(`/dashboard/${role}`);
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -34,21 +43,41 @@ function Register() {
 
   const validateForm = () => {
     let newErrors = {};
-    if (!formData.username.trim()) newErrors.username = ["Username is required"];
-    if (formData.username.trim().length < 3) newErrors.username = ["Username must be at least 3 characters"];
-    if (!formData.email.trim()) newErrors.email = ["Email is required"];
-    if (!formData.password) newErrors.password = ["Password is required"];
-    if (formData.password.length < 8) newErrors.password = ["Password must be at least 8 characters"];
-    if (formData.password !== formData.password2) newErrors.password2 = ["Passwords do not match"];
-    if (!formData.role) newErrors.role = ["Please select a role"];
-    
+    if (!formData.username.trim()) {
+      newErrors.username = ["Username is required"];
+    } else if (formData.username.trim().length < 3) {
+      newErrors.username = ["Username must be at least 3 characters"];
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = ["Email is required"];
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = ["Please enter a valid email address"];
+    }
+
+    if (!formData.password) {
+      newErrors.password = ["Password is required"];
+    } else if (formData.password.length < 7) {
+      newErrors.password = ["Password must be at least 7 characters"];
+    } else if (!/\d/.test(formData.password)) {
+      newErrors.password = ["Password must contain at least one number"];
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      newErrors.password = ["Password must contain at least one special character"];
+    }
+
+    if (!formData.password2) {
+      newErrors.password2 = ["Please confirm your password"];
+    } else if (formData.password !== formData.password2) {
+      newErrors.password2 = ["Passwords do not match"];
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -74,24 +103,29 @@ function Register() {
         <div className="register-left-content">
           <div className="register-branding">
             <h1 className="register-title">CATALYST</h1>
-            <p className="register-subtitle">Join Our Community</p>
           </div>
 
           <div className="register-features">
             <div className="feature-card">
               <span className="feature-emoji icon-donate">🎁</span>
-              <h3>Share & Give</h3>
-              <p>Donate items and help those in need</p>
+              <div className="feature-content">
+                <h3>Share & Give</h3>
+                <p>Donate items and help those in need</p>
+              </div>
             </div>
             <div className="feature-card">
               <span className="feature-emoji icon-request">🙋</span>
-              <h3>Request & Receive</h3>
-              <p>Ask for items and get support</p>
+              <div className="feature-content">
+                <h3>Request & Receive</h3>
+                <p>Ask for items and get support</p>
+              </div>
             </div>
             <div className="feature-card">
               <span className="feature-emoji icon-volunteer">🤝</span>
-              <h3>Volunteer & Help</h3>
-              <p>Be part of the charitable community</p>
+              <div className="feature-content">
+                <h3>Volunteer & Help</h3>
+                <p>Be part of the charitable community</p>
+              </div>
             </div>
           </div>
         </div>
@@ -128,7 +162,7 @@ function Register() {
                 disabled={loading}
               />
               {errors.username && (
-                <p className="error-text">{errors.username[0]}</p>
+                <p className="error-text">❌ {errors.username[0]}</p>
               )}
             </div>
 
@@ -148,30 +182,7 @@ function Register() {
                 disabled={loading}
               />
               {errors.email && (
-                <p className="error-text">{errors.email[0]}</p>
-              )}
-            </div>
-
-            {/* Role Selection */}
-            <div className="form-group">
-              <label htmlFor="role" className="form-label">
-                I want to be a
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="form-input"
-                disabled={loading}
-              >
-                <option value="">Select your role</option>
-                <option value="donor">Donor (Share items)</option>
-                <option value="receiver">Receiver (Request items)</option>
-                <option value="volunteer">Volunteer (Help others)</option>
-              </select>
-              {errors.role && (
-                <p className="error-text">{errors.role[0]}</p>
+                <p className="error-text">❌ {errors.email[0]}</p>
               )}
             </div>
 
@@ -187,7 +198,7 @@ function Register() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="At least 8 characters"
+                  placeholder="Min 7 chars, 1 number, 1 special char"
                   className="form-input"
                   disabled={loading}
                 />
@@ -201,7 +212,7 @@ function Register() {
                 </button>
               </div>
               {errors.password && (
-                <p className="error-text">{errors.password[0]}</p>
+                <p className="error-text">❌ {errors.password[0]}</p>
               )}
             </div>
 
@@ -231,7 +242,7 @@ function Register() {
                 </button>
               </div>
               {errors.password2 && (
-                <p className="error-text">{errors.password2[0]}</p>
+                <p className="error-text">❌ {errors.password2[0]}</p>
               )}
             </div>
 

@@ -35,7 +35,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2', 'role']
+        fields = ['username', 'email', 'password', 'password2']
 
     # 🔄 Cross-field validation
     def validate(self, attrs):
@@ -47,8 +47,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 "password": "Passwords must match."
             })
 
-        # apply custom password rules
-        validate_password(password)
+        # Apply custom password rules
+        custom_password_validator(password)
 
         return attrs
 
@@ -75,12 +75,21 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     # 🚀 Create user
     def create(self, validated_data):
-        validated_data.pop('password2')
-        user = User.objects.create_user(**validated_data)
-        # Ensure user is active by default
-        user.is_active = True
-        user.save()
-        return user
+        from django.db import IntegrityError
+        try:
+            validated_data.pop('password2')
+            user = User.objects.create_user(**validated_data)
+            # Ensure user is active by default
+            user.is_active = True
+            user.save()
+            return user
+        except IntegrityError as e:
+            if 'username' in str(e):
+                raise serializers.ValidationError({"username": "Username already exists."})
+            elif 'email' in str(e):
+                raise serializers.ValidationError({"email": "Email already registered."})
+            else:
+                raise
     
     
 #___________USER PROFILE SERIALIZER_________#
@@ -92,8 +101,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'phone_number',
             'profile_picture',
             'rating',
-            'aadhaar_last4',
-            'aadhaar_verified'
+            'is_verified'
         ]
 
 
@@ -101,14 +109,27 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
 
+    is_verified = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
             'id',
             'username',
+            'first_name',
+            'last_name',
             'email',
             'role',
+            'volunteer_code',
             'date_of_birth',
+            'is_active',
+            'is_verified',
             'profile',
         ]
+
+    def get_is_verified(self, obj):
+        # Check if profile exists
+        if hasattr(obj, 'profile') and obj.profile:
+            return obj.profile.is_verified
+        return False
 

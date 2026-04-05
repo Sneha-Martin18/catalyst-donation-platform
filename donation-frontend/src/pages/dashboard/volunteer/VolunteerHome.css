@@ -57,7 +57,7 @@
 }
 
 .stat-card.failed {
-  border-left-color: var(--mint-darker);
+  border-left-color: #fa709a;
 }
 
 .stat-card.rating {
@@ -170,7 +170,7 @@
   color: #004085;
 }
 
-.status-picked {
+.status-picked_up {
   background-color: #d1ecf1;
   color: #0c5460;
 }
@@ -180,8 +180,8 @@
   color: #155724;
 }
 
-.status-failed {
-  background-color: #f8d7da;
+.status-canceled {
+  background-color: #f8dede;
   color: #721c24;
 }
 
@@ -343,4 +343,3 @@
     grid-template-columns: 1fr;
   }
 }
-

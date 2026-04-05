@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 // Axios instance for API calls
-import api from "../api/axios.js";
+import api from "../api/api.js";
+import { useUser } from "../context/UserContext";
 
 // Styling
 import "./Login.css";
@@ -13,6 +14,7 @@ import "./Login.css";
 function Login() {
   // Used to redirect user after login
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   // Form state
   const [username, setUsername] = useState("");
@@ -75,17 +77,22 @@ function Login() {
       const profileResponse = await api.get("users/profile/");
       const role = profileResponse.data.role;
 
-      // Step 4: Save role
+      // Step 4: Save metadata
       localStorage.setItem("role", role);
+      localStorage.setItem("user_id", profileResponse.data.id);
+      localStorage.setItem("username", profileResponse.data.username);
 
-      // Step 5: Go to correct dashboard
+      // Step 5: Update Context
+      setUser(profileResponse.data);
+
+      // Step 6: Go to correct dashboard
       navigate(`/dashboard/${role}`);
     } catch (err) {
       console.error("Login error:", err);
       console.error("Error response:", err.response);
       console.error("Error status:", err.response?.status);
       console.error("Error data:", err.response?.data);
-      
+
       if (err.response?.status === 401) {
         setError("Invalid username or password");
       } else if (err.response?.data?.detail) {
@@ -102,37 +109,36 @@ function Login() {
 
   return (
     <div className="login-container">
-      {/* LEFT SIDE – Background + Text */}
+      {/* LEFT SIDE – Features */}
       <div className="login-left">
         <div className="login-left-content">
           <div className="login-branding">
             <h1 className="login-title">CATALYST</h1>
-            <p className="login-subtitle">Empowering Communities Through Giving</p>
           </div>
 
           <div className="login-features">
-            <div className="feature-item">
-              <span className="feature-icon icon-donate">🎁</span>
-              <h3>Share & Give</h3>
-              <p>Donate items and help those in need</p>
+            <div className="feature-card">
+              <span className="feature-emoji icon-donate">🎁</span>
+              <div className="feature-content">
+                <h3>Share & Give</h3>
+                <p>Donate items and help those in need</p>
+              </div>
             </div>
-            <div className="feature-item">
-              <span className="feature-icon icon-request">🙋</span>
-              <h3>Request & Receive</h3>
-              <p>Ask for items and get support</p>
+            <div className="feature-card">
+              <span className="feature-emoji icon-request">🙋</span>
+              <div className="feature-content">
+                <h3>Request & Receive</h3>
+                <p>Ask for items and get support</p>
+              </div>
             </div>
-            <div className="feature-item">
-              <span className="feature-icon icon-volunteer">🤝</span>
-              <h3>Volunteer & Help</h3>
-              <p>Be part of the charitable community</p>
+            <div className="feature-card">
+              <span className="feature-emoji icon-volunteer">🤝</span>
+              <div className="feature-content">
+                <h3>Volunteer & Help</h3>
+                <p>Be part of the charitable community</p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="login-dots">
-          <span>●</span>
-          <span>●</span>
-          <span>●</span>
         </div>
       </div>
 

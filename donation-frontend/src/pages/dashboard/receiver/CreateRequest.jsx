@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../../../api/api";
+import BackButton from "../../../components/BackButton";
 import "./CreateRequest.css";
 
 function CreateRequest() {
@@ -11,6 +12,7 @@ function CreateRequest() {
     quantity: 1,
     description: "",
     images_required: false,
+    delivery_preference: "volunteer",
   });
 
   const [loading, setLoading] = useState(false);
@@ -26,14 +28,15 @@ function CreateRequest() {
   ];
 
   const CATEGORIES = [
+    "Accessories",
     "Books",
     "Clothing",
-    "Furniture",
     "Electronics",
-    "Kitchen Items",
+    "Food",
+    "Furniture",
+    "Medical",
+    "Stationary",
     "Toys",
-    "Sports Equipment",
-    "Other",
   ];
 
   const handleChange = (e) => {
@@ -94,13 +97,14 @@ function CreateRequest() {
         quantity: 1,
         description: "",
         images_required: false,
+        delivery_preference: "volunteer",
       });
 
       // Scroll to top
       window.scrollTo(0, 0);
     } catch (err) {
       if (err.response?.status === 403) {
-        setError("Please complete Aadhaar verification first.");
+        setError("Please complete Email verification first.");
       } else if (err.response?.data) {
         const errorMsg = Object.values(err.response.data).flat().join(" ");
         setError(errorMsg || "Failed to create request");
@@ -115,6 +119,7 @@ function CreateRequest() {
   return (
     <div className="create-request">
       <div className="request-container">
+        <BackButton />
         <h1>Create Item Request</h1>
         <p className="subtitle">Tell us what items you're looking for</p>
 
@@ -218,6 +223,38 @@ function CreateRequest() {
               placeholder="Add any additional details about what you're looking for..."
               rows="4"
             ></textarea>
+          </div>
+
+          {/* DELIVERY PREFERENCE */}
+          <div className="form-group">
+            <label>Delivery Preference *</label>
+            <div className="delivery-pref-toggle" style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+              <button
+                type="button"
+                className={`pref-btn ${formData.delivery_preference === 'self_pickup' ? 'active' : ''}`}
+                onClick={() => setFormData(prev => ({ ...prev, delivery_preference: 'self_pickup' }))}
+                style={{
+                  flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid #ddd", background: formData.delivery_preference === 'self_pickup' ? "#fafff0" : "white",
+                  borderColor: formData.delivery_preference === 'self_pickup' ? "#b0c924" : "#ddd", color: formData.delivery_preference === 'self_pickup' ? "#2c3e50" : "#666",
+                  fontWeight: "600", cursor: "pointer"
+                }}
+              >
+                🏠 Self Pickup
+              </button>
+              <button
+                type="button"
+                className={`pref-btn ${formData.delivery_preference === 'volunteer' ? 'active' : ''}`}
+                onClick={() => setFormData(prev => ({ ...prev, delivery_preference: 'volunteer' }))}
+                style={{
+                  flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid #ddd", background: formData.delivery_preference === 'volunteer' ? "#fafff0" : "white",
+                  borderColor: formData.delivery_preference === 'volunteer' ? "#b0c924" : "#ddd", color: formData.delivery_preference === 'volunteer' ? "#2c3e50" : "#666",
+                  fontWeight: "600", cursor: "pointer"
+                }}
+              >
+                🚲 Volunteer
+              </button>
+            </div>
+            <small className="help-text">Choose how you would prefer to receive the item once matched.</small>
           </div>
 
           {/* IMAGES REQUIRED */}

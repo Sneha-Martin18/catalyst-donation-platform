@@ -39,3 +39,17 @@ class AnalyticsReport(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.start_date} → {self.end_date})"
+
+
+class DemandPrediction(models.Model):
+    category = models.CharField(max_length=100)
+    predicted_quantity = models.FloatField()
+    confidence_score = models.FloatField()  # R-squared or similar
+    prediction_date = models.DateField(auto_now_add=True)
+    target_month = models.CharField(max_length=20)  # e.g., "March 2026"
+
+    class Meta:
+        ordering = ["-prediction_date", "-predicted_quantity"]
+
+    def __str__(self):
+        return f"Prediction: {self.category} -> {self.predicted_quantity} for {self.target_month}"

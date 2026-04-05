@@ -61,6 +61,15 @@ function AdminLayout() {
             <span>Requests</span>
           </Link>
 
+          {/* ASSIGN VOLUNTEERS */}
+          <Link
+            to="assign-volunteers"
+            className={`nav-link ${isActive("assign-volunteers") ? "active" : ""}`}
+          >
+            <span className="icon">🛵</span>
+            <span>Assign Volunteers</span>
+          </Link>
+
           {/* 🔹 REPORTS (NEW) */}
           <Link
             to="reports"
@@ -70,15 +79,31 @@ function AdminLayout() {
             <span>Reports</span>
           </Link>
 
+          {/* 🔹 CAMPAIGNS (NEW) */}
+          <Link
+            to="campaigns"
+            className={`nav-link ${isActive("campaigns") ? "active" : ""}`}
+          >
+            <span className="icon">📢</span>
+            <span>Live Campaigns</span>
+          </Link>
+
           {/* PROFILE (global) */}
           <Link
             to="/profile"
-            className={`nav-link ${
-              location.pathname === "/profile" ? "active" : ""
-            }`}
+            className={`nav-link ${location.pathname === "/profile" ? "active" : ""
+              }`}
           >
             <span className="icon">👤</span>
             <span>Profile</span>
+          </Link>
+
+          <Link
+            to="/dashboard/admin/about"
+            className={`nav-link ${isActive("about") ? "active" : ""}`}
+          >
+            <span className="icon">ℹ️</span>
+            <span>About</span>
           </Link>
 
           {/* LOGOUT */}

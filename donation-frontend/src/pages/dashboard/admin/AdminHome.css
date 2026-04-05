@@ -48,12 +48,21 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
-.stat-card.users { border-left-color: var(--mint-dark); }
-.stat-card.donors { border-left-color: var(--mint-accent); }
-.stat-card.receivers { border-left-color: #4facfe; }
-.stat-card.pending { border-left-color: #ffa502; }
-.stat-card.deliveries { border-left-color: #43e97b; }
-.stat-card.completed { border-left-color: #fd79a8; }
+.stat-card.users {
+  border-left-color: var(--mint-dark);
+}
+
+.stat-card.pending {
+  border-left-color: #ffa502;
+}
+
+.stat-card.deliveries {
+  border-left-color: #43e97b;
+}
+
+.stat-card.completed {
+  border-left-color: #fd79a8;
+}
 
 .stat-icon {
   font-size: 2.5rem;
@@ -66,13 +75,7 @@
   background: linear-gradient(135deg, var(--mint-dark)15 0%, var(--mint-accent)15 100%);
 }
 
-.stat-card.donors .stat-icon {
-  background: linear-gradient(135deg, #f09315 0%, var(--mint-darker)15 100%);
-}
 
-.stat-card.receivers .stat-icon {
-  background: linear-gradient(135deg, #4facfe15 0%, #00f2fe15 100%);
-}
 
 .stat-card.pending .stat-icon {
   background: linear-gradient(135deg, #ffa50215 0%, #ffb00015 100%);
@@ -310,4 +313,3 @@
     grid-template-columns: 1fr;
   }
 }
-

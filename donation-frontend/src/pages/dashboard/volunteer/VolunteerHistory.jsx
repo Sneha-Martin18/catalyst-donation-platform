@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../../api/api";
+import BackButton from "../../../components/BackButton";
+import Pagination from "../../../components/Pagination";
 import "./VolunteerHistory.css";
 
 function VolunteerHistory() {
@@ -8,25 +10,38 @@ function VolunteerHistory() {
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
-    fetchDeliveryHistory();
-  }, []);
+    fetchDeliveryHistory(page);
+  }, [page]);
 
   useEffect(() => {
     applyFilter();
   }, [filter, deliveries]);
 
-  const fetchDeliveryHistory = async () => {
+  const fetchDeliveryHistory = async (currentPage = 1) => {
     try {
       setLoading(true);
-      const res = await api.get("delivery/volunteer/deliveries/");
-      setDeliveries(res.data || []);
+      const res = await api.get(`receiver/volunteer/history/?page=${currentPage}`);
+      if (res.data.results) {
+        setDeliveries(res.data.results);
+        setTotalCount(res.data.count);
+      } else {
+        setDeliveries(res.data || []);
+        setTotalCount(res.data.length || 0);
+      }
     } catch (error) {
       console.error("Failed to fetch delivery history:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const applyFilter = () => {
@@ -35,13 +50,13 @@ function VolunteerHistory() {
     } else if (filter === 'completed') {
       setFilteredDeliveries(deliveries.filter(d => d.status === 'delivered'));
     } else if (filter === 'failed') {
-      setFilteredDeliveries(deliveries.filter(d => d.status === 'failed'));
+      setFilteredDeliveries(deliveries.filter(d => d.status === 'canceled'));
     }
   };
 
   const getDeliveryTimeline = (delivery) => {
     const timeline = [];
-    
+
     if (delivery.status) timeline.push({ status: delivery.status, time: delivery.updated_at });
     if (delivery.actual_pickup) timeline.push({ status: 'picked', time: delivery.actual_pickup });
     if (delivery.actual_delivery) timeline.push({ status: 'delivered', time: delivery.actual_delivery });
@@ -55,23 +70,26 @@ function VolunteerHistory() {
 
   return (
     <div className="volunteer-history">
-      <h1>Delivery History</h1>
+      <div className="header">
+        <BackButton />
+        <h1>Delivery History</h1>
+      </div>
 
       {/* Filter Buttons */}
       <div className="filter-buttons">
-        <button 
+        <button
           className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
           onClick={() => setFilter('all')}
         >
           All ({deliveries.length})
         </button>
-        <button 
+        <button
           className={`filter-btn ${filter === 'completed' ? 'active' : ''}`}
           onClick={() => setFilter('completed')}
         >
           Completed ({deliveries.filter(d => d.status === 'delivered').length})
         </button>
-        <button 
+        <button
           className={`filter-btn ${filter === 'failed' ? 'active' : ''}`}
           onClick={() => setFilter('failed')}
         >
@@ -83,8 +101,8 @@ function VolunteerHistory() {
       {filteredDeliveries.length > 0 ? (
         <div className="deliveries-grid">
           {filteredDeliveries.map(delivery => (
-            <div 
-              key={delivery.id} 
+            <div
+              key={delivery.id}
               className="delivery-card"
               onClick={() => setSelectedDelivery(selectedDelivery?.id === delivery.id ? null : delivery)}
             >
@@ -97,32 +115,22 @@ function VolunteerHistory() {
 
               <div className="card-body">
                 <p><strong>Item:</strong> {delivery.donation?.item_name || 'N/A'}</p>
-                <p><strong>Scheduled:</strong> {new Date(delivery.scheduled_pickup).toLocaleDateString()}</p>
-                <p><strong>Category:</strong> {delivery.donation?.category || 'N/A'}</p>
+                <p><strong>Date:</strong> {new Date(delivery.updated_at).toLocaleDateString()}</p>
+                <p><strong>Receiver:</strong> {delivery.receiver_name || 'N/A'}</p>
               </div>
 
               {selectedDelivery?.id === delivery.id && (
                 <div className="card-expanded">
                   <h4>Full Details</h4>
-                  
+
                   <div className="detail-section">
-                    <h5>Pickup</h5>
-                    <p>{delivery.pickup_address}</p>
-                    {delivery.actual_pickup && (
-                      <p className="timestamp">
-                        Picked: {new Date(delivery.actual_pickup).toLocaleString()}
-                      </p>
-                    )}
+                    <h5>Pickup Location</h5>
+                    <p>{delivery.donation?.pickup_address || 'N/A'}</p>
                   </div>
 
                   <div className="detail-section">
-                    <h5>Delivery</h5>
-                    <p>{delivery.drop_address}</p>
-                    {delivery.actual_delivery && (
-                      <p className="timestamp">
-                        Delivered: {new Date(delivery.actual_delivery).toLocaleString()}
-                      </p>
-                    )}
+                    <h5>Delivery Location</h5>
+                    <p>{delivery.drop_address || delivery.receiver_name + "'s Address"}</p>
                   </div>
 
                   {delivery.failure_reason && (
@@ -149,15 +157,22 @@ function VolunteerHistory() {
         <p className="empty-state">No deliveries found for this filter.</p>
       )}
 
+      {deliveries.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(totalCount / 10)}
+          onPageChange={handlePageChange}
+        />
+      )}
+
       {/* Legend */}
       <div className="legend">
         <h4>Status Reference</h4>
         <div className="legend-items">
           <div><span className="badge assigned">Assigned</span> - Delivery assigned to you</div>
-          <div><span className="badge en_route">En Route</span> - You're on the way</div>
-          <div><span className="badge picked">Picked</span> - Item picked up</div>
+          <div><span className="badge picked">Picked Up</span> - Item picked up</div>
           <div><span className="badge delivered">Delivered</span> - Successfully delivered</div>
-          <div><span className="badge failed">Failed</span> - Delivery failed</div>
+          <div><span className="badge failed">Canceled</span> - Order canceled</div>
         </div>
       </div>
     </div>

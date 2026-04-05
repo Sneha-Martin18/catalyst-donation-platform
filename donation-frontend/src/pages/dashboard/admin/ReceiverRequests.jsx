@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../../api/api";
+import BackButton from "../../../components/BackButton";
 import "./ReceiverRequests.css";
 
 function ReceiverRequests() {
@@ -41,6 +42,29 @@ function ReceiverRequests() {
     } catch (err) {
       console.error(err);
       alert("Action failed");
+    }
+  };
+
+  const deleteRequest = async (id) => {
+    try {
+      await api.delete(`/receiver/staff/item-requests/${id}/delete/`);
+      fetchRequests();
+      setConfirmAction(null);
+    } catch (err) {
+      console.error(err);
+      alert("Delete failed");
+    }
+  };
+
+  const updateDeliveryPreference = async (id, newPref) => {
+    try {
+      await api.patch(`/receiver/staff/item-requests/${id}/delivery-preference/`, {
+        delivery_preference: newPref
+      });
+      fetchRequests();
+    } catch (err) {
+      console.error(err);
+      alert("Update failed");
     }
   };
 
@@ -93,6 +117,7 @@ function ReceiverRequests() {
 
   return (
     <div className="receiver-requests-page">
+      <BackButton />
       <div className="page-header">
         <h1>Receiver Requests</h1>
         <p className="subtitle">Manage item requests from receivers</p>
@@ -186,39 +211,80 @@ function ReceiverRequests() {
             </div>
 
             <div className="card-content">
-              {request.item_category && (
-                <p><strong>Category:</strong> {request.item_category}</p>
+              {request.category && (
+                <p><strong>Category:</strong> {request.category}</p>
               )}
               {request.quantity && (
                 <p><strong>Quantity:</strong> {request.quantity}</p>
               )}
-              {request.item_description && (
-                <p><strong>Description:</strong> {request.item_description}</p>
+              {request.description && (
+                <p><strong>Description:</strong> {request.description}</p>
               )}
               {request.condition && (
                 <p><strong>Required Condition:</strong> {request.condition.replace(/_/g, " ")}</p>
               )}
+
+              <div className="delivery-pref-section" style={{ marginTop: '10px', padding: '10px', background: '#f8f9fa', borderRadius: '8px' }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '0.9rem', fontWeight: 'bold' }}>📍 Delivery Preference:</p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className={`pref-toggle-btn ${request.delivery_preference === 'self_pickup' ? 'active' : ''}`}
+                    onClick={() => updateDeliveryPreference(request.id, 'self_pickup')}
+                    style={{
+                      flex: 1, padding: '6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #ddd',
+                      background: request.delivery_preference === 'self_pickup' ? '#b0c924' : 'white',
+                      color: request.delivery_preference === 'self_pickup' ? 'white' : '#666',
+                      cursor: 'pointer', fontWeight: '600'
+                    }}
+                  >
+                    🏠 Self Pickup
+                  </button>
+                  <button
+                    className={`pref-toggle-btn ${request.delivery_preference === 'volunteer' ? 'active' : ''}`}
+                    onClick={() => updateDeliveryPreference(request.id, 'volunteer')}
+                    style={{
+                      flex: 1, padding: '6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #ddd',
+                      background: request.delivery_preference === 'volunteer' ? '#b0c924' : 'white',
+                      color: request.delivery_preference === 'volunteer' ? 'white' : '#666',
+                      cursor: 'pointer', fontWeight: '600'
+                    }}
+                  >
+                    🚲 Volunteer
+                  </button>
+                </div>
+              </div>
+
               <p className="request-date">
                 🕐 Requested on {new Date(request.created_at).toLocaleDateString("en-IN")}
               </p>
             </div>
 
-            {request.status === "pending" && (
-              <div className="card-actions">
-                <button
-                  className="btn-approve"
-                  onClick={() => setConfirmAction({ type: "approve", id: request.id, name: request.item_name })}
-                >
-                  ✅ Approve
-                </button>
-                <button
-                  className="btn-reject"
-                  onClick={() => setConfirmAction({ type: "reject", id: request.id, name: request.item_name })}
-                >
-                  ❌ Reject
-                </button>
-              </div>
-            )}
+            <div className="card-actions">
+              {request.status === "pending" && (
+                <>
+                  <button
+                    className="btn-approve"
+                    onClick={() => setConfirmAction({ type: "approve", id: request.id, name: request.item_name })}
+                  >
+                    ✅ Approve
+                  </button>
+                  <button
+                    className="btn-reject"
+                    onClick={() => setConfirmAction({ type: "reject", id: request.id, name: request.item_name })}
+                  >
+                    ❌ Reject
+                  </button>
+                </>
+              )}
+              <button
+                className="btn-delete-request"
+                style={{ marginLeft: 'auto', background: 'none', border: '1px solid #ff416c', color: '#ff416c', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                onClick={() => setConfirmAction({ type: "delete", id: request.id, name: request.item_name })}
+                title="Delete Request"
+              >
+                🗑️ Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -249,8 +315,10 @@ function ReceiverRequests() {
                 onClick={() => {
                   if (confirmAction.type === "approve") {
                     approveRequest(confirmAction.id);
-                  } else {
+                  } else if (confirmAction.type === "reject") {
                     rejectRequest(confirmAction.id);
+                  } else if (confirmAction.type === "delete") {
+                    deleteRequest(confirmAction.id);
                   }
                 }}
               >

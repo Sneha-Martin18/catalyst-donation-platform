@@ -52,7 +52,12 @@ class Delivery(models.Model):
     )
 
     pickup_address = models.TextField()
+    pickup_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    pickup_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    
     drop_address = models.TextField()
+    drop_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    drop_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     scheduled_pickup = models.DateTimeField()
     actual_pickup = models.DateTimeField(null=True, blank=True)

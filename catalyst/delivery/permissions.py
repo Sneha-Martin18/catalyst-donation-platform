@@ -24,7 +24,7 @@ class IsVolunteerAndAssigned(BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and request.user.role == 'volunteer'
+            and request.user.role in ['volunteer', 'user']
         )
 
     def has_object_permission(self, request, view, obj):
@@ -40,5 +40,5 @@ class IsReceiver(BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and request.user.role == 'receiver'
+            and request.user.role in ['receiver', 'user']
         )

@@ -17,9 +17,10 @@ class IsOwnerOrAdmin(BasePermission):
         if hasattr(request.user, 'role') and request.user.role.lower() == 'admin':
             return True
 
-        # Donors can edit/delete their own donations
-        if hasattr(request.user, 'role') and request.user.role.lower() == 'donor':
-            return obj.owner == request.user  # Assuming 'owner' field in Donation model
+        # Donors or General Users can edit/delete their own donations
+        if hasattr(request.user, 'role') and request.user.role.lower() in ['donor', 'user']:
+            return obj.donor == request.user  # The models.py actually uses 'donor' for the FK, checking... yes, obj.donor 
+
 
         # All others cannot modify
         return False

@@ -16,3 +16,9 @@ six==1.17.0
 sqlparse==0.5.4
 tzdata==2025.3
 urllib3==2.6.2
+scikit-learn==1.6.1
+pandas==2.2.3
+numpy==2.2.3
+geopy==2.4.1
+ortools==9.11.4429
+

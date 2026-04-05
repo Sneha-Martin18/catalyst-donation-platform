@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
+import BackButton from "../../components/BackButton";
 import "./Profile.css";
 import DonorProfile from "./DonorProfile";
 import ReceiverProfile from "./ReceiverProfile";
@@ -112,26 +113,30 @@ function Profile() {
 
   return (
     <div className="profile-container">
-      <div className="profile-back-button">
-        <button
-          onClick={() => navigate(`/dashboard/${profile.role}`)}
-          className="btn-back"
-        >
-          ← Back to Dashboard
-        </button>
-      </div>
+      <BackButton text={`Back to Dashboard`} />
+      {/* Previous custom back button removed for consistency */}
 
       {!isEditing && profile.role === "donor" && (
-        <DonorProfile profile={profile} onEditClick={() => setIsEditing(true)} />
+        <DonorProfile profile={profile} refreshProfile={fetchProfile} onEditClick={() => setIsEditing(true)} />
       )}
       {!isEditing && profile.role === "receiver" && (
-        <ReceiverProfile profile={profile} onEditClick={() => setIsEditing(true)} />
+        <ReceiverProfile profile={profile} refreshProfile={fetchProfile} onEditClick={() => setIsEditing(true)} />
       )}
       {!isEditing && profile.role === "volunteer" && (
-        <VolunteerProfile profile={profile} onEditClick={() => setIsEditing(true)} />
+        <VolunteerProfile profile={profile} refreshProfile={fetchProfile} onEditClick={() => setIsEditing(true)} />
       )}
       {!isEditing && profile.role === "admin" && (
         <AdminProfile profile={profile} onEditClick={() => setIsEditing(true)} />
+      )}
+      {!isEditing && profile.role === "user" && (
+        <DonorProfile profile={profile} refreshProfile={fetchProfile} onEditClick={() => setIsEditing(true)} />
+      )}
+
+      {!isEditing && !["donor", "receiver", "volunteer", "admin", "user"].includes(profile.role) && (
+        <div className="error-message">
+          <h2>Unknown Role</h2>
+          <p>Your account has an unassigned role: <strong>{profile.role}</strong>.</p>
+        </div>
       )}
 
       {isEditing && (

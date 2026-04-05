@@ -7,7 +7,8 @@ from .views import (
     DeliveryStatusUpdateView,
     DeliveryAnalyticsView,
     DeliveryRatingCreateView,
-    VolunteerRatingsView
+    VolunteerRatingsView,
+    OptimizedRouteView
 )
 
 urlpatterns = [
@@ -16,6 +17,7 @@ urlpatterns = [
 
     # Volunteer
     path('volunteer/deliveries/', VolunteerDeliveryView.as_view(), name='volunteer-deliveries'),
+    path('volunteer/optimized-route/', OptimizedRouteView.as_view(), name='volunteer-optimized-route'),
 
     # GPS tracking
     path('deliveries/location/', DeliveryLocationView.as_view(), name='delivery-location'),

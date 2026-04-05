@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../api/api";
+import BackButton from "../../../components/BackButton";
+import Pagination from "../../../components/Pagination";
 import "./MyRequests.css";
 
 function MyRequests() {
@@ -8,23 +10,70 @@ function MyRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Delivery selection states
+  const [selectedFulfillment, setSelectedFulfillment] = useState(null);
+  const [deliveryType, setDeliveryType] = useState("volunteer");
+  const [dropAddress, setDropAddress] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    fetchRequests();
-  }, []);
+    fetchRequests(page);
+  }, [page]);
 
-  const fetchRequests = async () => {
+  const confirmAcceptDonation = async () => {
+    if (!selectedFulfillment) return;
+    setIsProcessing(true);
+
+    try {
+      await api.post("receiver/orders/", {
+        donation: selectedFulfillment.id,
+        delivery_type: deliveryType,
+        drop_address: deliveryType === "volunteer" ? dropAddress : "",
+      });
+
+      alert("Donation accepted successfully! Order created.");
+      setSelectedFulfillment(null);
+      setSelectedRequest(null); // Close the detail modal
+      setDropAddress("");
+      fetchRequests(page); // Refresh the list
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+        "Failed to accept donation. Please try again."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const fetchRequests = async (currentPage = 1) => {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("receiver/requests/");
-      setRequests(response.data);
+      const response = await api.get(`receiver/requests/?page=${currentPage}`);
+
+      if (response.data.results) {
+        setRequests(response.data.results);
+        setTotalCount(response.data.count);
+      } else {
+        setRequests(response.data);
+        setTotalCount(response.data.length);
+      }
     } catch (err) {
       console.error("Failed to fetch requests:", err);
       setError("Failed to load requests");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const filteredRequests =
@@ -69,6 +118,7 @@ function MyRequests() {
 
   return (
     <div className="my-requests">
+      <BackButton />
       <div className="requests-header">
         <h1>My Item Requests</h1>
         <Link to="../create" className="btn-new-request">
@@ -108,91 +158,32 @@ function MyRequests() {
           </button>
         </div>
       </div>
-
-      {/* REQUESTS LIST */}
-      {filteredRequests.length > 0 ? (
-        <div className="requests-grid">
-          {filteredRequests.map((request) => (
-            <div key={request.id} className="request-card">
-              <div className="card-header">
+      {/* REQUESTS LIST - Simplified Cards */}
+      {requests.length > 0 ? (
+        <div className="requests-table-grid">
+          {requests.map((request) => (
+            <div key={request.id} className="request-summary-card">
+              <div className="card-top-info">
                 <h3>{request.item_name}</h3>
                 <span className={`status-badge ${getStatusColor(request.status)}`}>
-                  {request.status}
+                  {(request.status || "PENDING").toUpperCase()}
                 </span>
               </div>
 
-              <div className="card-body">
-                <div className="detail-row">
-                  <label>Category:</label>
-                  <span>{request.category}</span>
-                </div>
-
-                <div className="detail-row">
-                  <label>Quantity:</label>
-                  <span>{request.quantity}</span>
-                </div>
-
-                <div className="detail-row">
-                  <label>Condition:</label>
-                  <span>{getConditionLabel(request.condition)}</span>
-                </div>
-
-                {request.used_duration_months && (
-                  <div className="detail-row">
-                    <label>Duration of Use:</label>
-                    <span>{request.used_duration_months} months</span>
-                  </div>
-                )}
-
-                {request.description && (
-                  <div className="detail-row full-width">
-                    <label>Description:</label>
-                    <p className="description">{request.description}</p>
-                  </div>
-                )}
-
-                {request.images_required && (
-                  <div className="detail-row">
-                    <label>Images Required:</label>
-                    <span className="badge-info">📸 Yes</span>
-                  </div>
-                )}
-
-                <div className="detail-row full-width dates">
-                  <small>
-                    Created: {new Date(request.created_at).toLocaleDateString()}
-                  </small>
-                  {request.updated_at !== request.created_at && (
-                    <small>
-                      Updated: {new Date(request.updated_at).toLocaleDateString()}
-                    </small>
-                  )}
-                </div>
-              </div>
-
-              <div className="card-footer">
+              <div className="card-bottom-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedRequest(request)}
+                >
+                  View Details
+                </button>
                 {request.status === "approved" && (
                   <Link
-                    to="../../browse-donations"
+                    to={`../browse?category=${encodeURIComponent(request.category)}&search=${encodeURIComponent(request.item_name)}`}
                     className="btn btn-primary"
                   >
-                    Browse Matching Donations
+                    Browse Items
                   </Link>
-                )}
-                {request.status === "pending" && (
-                  <p className="status-info">
-                    ⏳ Awaiting approval by our team...
-                  </p>
-                )}
-                {request.status === "rejected" && (
-                  <p className="status-info error">
-                    ❌ Request was rejected. Try creating a new one.
-                  </p>
-                )}
-                {request.status === "completed" && (
-                  <p className="status-info success">
-                    ✅ Request fulfilled!
-                  </p>
                 )}
               </div>
             </div>
@@ -212,7 +203,162 @@ function MyRequests() {
           </Link>
         </div>
       )}
-    </div>
+
+      {requests.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={Math.ceil(totalCount / 10)}
+          onPageChange={handlePageChange}
+        />
+      )}
+
+      {/* DETAILS MODAL - Based on User Image */}
+      {
+        selectedRequest && (
+          <div className="modal-overlay" onClick={() => setSelectedRequest(null)}>
+            <div className="request-details-modal" onClick={e => e.stopPropagation()}>
+              <button className="close-modal" onClick={() => setSelectedRequest(null)}>×</button>
+
+              <div className="modal-header-premium">
+                <h2>{selectedRequest.item_name}</h2>
+                <span className={`status-badge-premium ${getStatusColor(selectedRequest.status)}`}>
+                  {selectedRequest.status.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="modal-body-premium">
+                <div className="premium-detail-row">
+                  <label>Category:</label>
+                  <span>{selectedRequest.category}</span>
+                </div>
+                <div className="premium-detail-row">
+                  <label>Quantity:</label>
+                  <span>{selectedRequest.quantity}</span>
+                </div>
+                <div className="premium-detail-row">
+                  <label>Condition:</label>
+                  <span>{getConditionLabel(selectedRequest.condition)}</span>
+                </div>
+                {selectedRequest.used_duration_months && (
+                  <div className="premium-detail-row">
+                    <label>Duration of Use:</label>
+                    <span>{selectedRequest.used_duration_months} months</span>
+                  </div>
+                )}
+
+                <div className="premium-description-section">
+                  <label>Description:</label>
+                  <p>{selectedRequest.description || "No description provided."}</p>
+                </div>
+
+                <div className="premium-detail-row highlight" style={{ marginBottom: "20px" }}>
+                  <label>Delivery Preference:</label>
+                  <span>
+                    {selectedRequest.delivery_preference === 'self_pickup' ? '🏠 Self Pickup' : '🚲 Volunteer Delivery'}
+                  </span>
+                </div>
+
+                {/* MATCHED DONATION SECTION */}
+                {selectedRequest.fulfillments && selectedRequest.fulfillments.length > 0 && selectedRequest.status === 'approved' && (
+                  <div className="fulfillment-acceptance-section">
+                    <h3>🎁 Matching Donation Found!</h3>
+
+                    {!selectedFulfillment ? (
+                      <div className="matched-item-preview">
+                        <div className="match-info">
+                          <div>
+                            <strong className="match-title">{selectedRequest.fulfillments[0].item_name}</strong>
+                            <span className="match-condition">Condition: {selectedRequest.fulfillments[0].condition?.replace(/_/g, " ")}</span>
+                          </div>
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => {
+                              setSelectedFulfillment(selectedRequest.fulfillments[0]);
+                              setDeliveryType(selectedRequest.delivery_preference || "volunteer");
+                            }}
+                          >
+                            Accept & Choose Delivery
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="delivery-selection-flow">
+                        <h4>Choose Delivery Method for this item:</h4>
+
+                        <div className="delivery-method-grid">
+                          <div
+                            onClick={() => setDeliveryType("self_pickup")}
+                            className={`delivery-box ${deliveryType === "self_pickup" ? 'active' : ''}`}
+                          >
+                            <span className="delivery-icon">🏠</span>
+                            <strong>Self Pickup</strong>
+                          </div>
+                          <div
+                            onClick={() => setDeliveryType("volunteer")}
+                            className={`delivery-box ${deliveryType === "volunteer" ? 'active' : ''}`}
+                          >
+                            <span className="delivery-icon">🚲</span>
+                            <strong>Volunteer</strong>
+                          </div>
+                        </div>
+
+                        {deliveryType === "volunteer" && (
+                          <div className="address-input-group">
+                            <label>Drop Location</label>
+                            <textarea
+                              rows="2"
+                              placeholder="Where should the volunteer deliver this?"
+                              value={dropAddress}
+                              onChange={(e) => setDropAddress(e.target.value)}
+                            />
+                          </div>
+                        )}
+
+                        <div className="acceptance-actions">
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => setSelectedFulfillment(null)}
+                          >
+                            Back
+                          </button>
+                          <button
+                            className="btn btn-confirm-accept"
+                            onClick={confirmAcceptDonation}
+                            disabled={isProcessing}
+                          >
+                            {isProcessing ? "Processing..." : "Confirm & Accept Item"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="premium-detail-row highlight">
+                  <label>Images Required:</label>
+                  <span className="images-badge">
+                    {selectedRequest.images_required ? "📸 Yes" : "No"}
+                  </span>
+                </div>
+
+                <div className="modal-footer-date">
+                  <small>Created: {new Date(selectedRequest.created_at).toLocaleDateString()}</small>
+                </div>
+
+                {selectedRequest.status === "approved" && (
+                  <Link
+                    to={`../browse?category=${encodeURIComponent(selectedRequest.category)}&search=${encodeURIComponent(selectedRequest.item_name)}`}
+                    className="btn-browse-large"
+                  >
+                    Browse Matching Donations
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 }
 

@@ -131,7 +131,7 @@ function DonorHome() {
           <Link to="history" className="action-btn btn-info">
             📜 Donation History
           </Link>
-          <button 
+          <button
             className="action-btn btn-success"
             onClick={fetchDashboardData}
           >
@@ -161,7 +161,7 @@ function DonorHome() {
                 </div>
                 <div className="donation-actions">
                   {donation.status === "pending" && (
-                    <Link 
+                    <Link
                       to={`/dashboard/donor/edit/${donation.id}`}
                       className="btn btn-edit"
                     >

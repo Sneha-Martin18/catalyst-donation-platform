@@ -310,3 +310,88 @@ class VolunteerRatingsView(APIView):
         }
 
         return Response(data)
+
+from .utils.route_solver import solver
+from .utils.geocoder import geocoder
+
+# ... (existing views)
+
+class OptimizedRouteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        
+        # 1. Get deliveries assigned to this volunteer that are not yet delivered/failed
+        deliveries = Delivery.objects.filter(
+            delivery_partner=user,
+            status__in=['assigned', 'en_route', 'picked']
+        )
+        
+        if not deliveries.exists():
+            return Response({"message": "No active deliveries found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # 2. Get Starting Point (Latest GPS or Profile Address)
+        latest_location = DeliveryLocation.objects.filter(
+            delivery__delivery_partner=user
+        ).order_by('-recorded_at').first()
+
+        start_coords = None
+        if latest_location:
+            start_coords = (float(latest_location.latitude), float(latest_location.longitude))
+        else:
+            profile = getattr(user, 'profile', None)
+            if profile and profile.address:
+                lat, lng = geocoder.geocode_address(profile.address)
+                if lat and lng:
+                    start_coords = (lat, lng)
+
+        if not start_coords:
+            first_delivery = deliveries.first()
+            if first_delivery.pickup_latitude:
+                 start_coords = (float(first_delivery.pickup_latitude), float(first_delivery.pickup_longitude))
+            else:
+                 return Response({"error": "Current location unknown and no address found in profile."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 3. Format deliveries for solver
+        solver_deliveries = []
+        for d in deliveries:
+            if d.pickup_latitude and d.drop_latitude:
+                solver_deliveries.append({
+                    'id': d.id,
+                    'item': d.donation.item_name,
+                    'pickup': (float(d.pickup_latitude), float(d.pickup_longitude)),
+                    'dropoff': (float(d.drop_latitude), float(d.drop_longitude))
+                })
+
+        if not solver_deliveries:
+            return Response({"error": "Active deliveries are missing coordinate data."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 4. Solve
+        route_indices = solver.solve(start_coords, solver_deliveries)
+        
+        # Map indices back to descriptive objects
+        locations = [start_coords]
+        mapping = {} # index in locations -> delivery info
+        for i, d in enumerate(solver_deliveries):
+             locations.append(d['pickup'])
+             mapping[len(locations)-1] = {"type": "pickup", "delivery_id": d['id'], "item": d['item']}
+             locations.append(d['dropoff'])
+             mapping[len(locations)-1] = {"type": "dropoff", "delivery_id": d['id'], "item": d['item']}
+
+        final_route = []
+        for step in route_indices:
+            idx = step['index']
+            description = mapping.get(idx, {"type": "start", "delivery_id": None, "item": None})
+            final_route.append({
+                "action": description['type'],
+                "delivery_id": description['delivery_id'],
+                "item_name": description['item'],
+                "coords": step['coords']
+            })
+
+        return Response({
+            "start_point": start_coords,
+            "optimized_route": final_route,
+            "total_stops": len(final_route)
+        })

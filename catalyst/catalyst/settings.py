@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'delivery',
     'analytics',
+    'chatbot',
+    'campaigns',
 ]
 
 MIDDLEWARE = [
@@ -124,6 +126,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
 SIMPLE_JWT = {
@@ -138,6 +142,10 @@ cloudinary.config(
     api_key=os.getenv("CLOUDINARY_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET"),
 )
+
+# Razorpay Config
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_dummy_id")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "dummy_secret")
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -177,3 +185,23 @@ STATIC_URL = 'static/'
 
 # Default primary key field type
 AUTH_USER_MODEL = 'users.User'
+
+# Email Config
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# If no credentials or using placeholders, use console for safety/debugging
+PLACEHOLDERS = ['your-email@gmail.com', 'your-app-password', '']
+if EMAIL_HOST_USER in PLACEHOLDERS or EMAIL_HOST_PASSWORD in PLACEHOLDERS:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("⚠️ [EMAIL] Using Console Backend (Credentials not set in .env)")
+else:
+    print(f"✅ [EMAIL] Using SMTP Backend ({EMAIL_HOST_USER})")
+
+# Frontend URL for email links
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")

@@ -9,7 +9,7 @@ class IsReceiver(BasePermission):
         return (
             request.user.is_authenticated and
             hasattr(request.user, 'role') and
-            request.user.role.lower() == 'receiver'
+            request.user.role.lower() in ['receiver', 'user', 'donor', 'volunteer']
         )
         
 class IsAdminOrStaff(BasePermission):

@@ -9,9 +9,14 @@ function ProtectedRoute({ allowedRole, children }) {
     return <Navigate to="/login" replace />;
   }
 
-  // If logged in but wrong role → send to correct dashboard
-  if (allowedRole && role !== allowedRole) {
-    return <Navigate to={`/dashboard/${role}`} replace />;
+  // Role compatibility for unified dashboard
+  const userRoles = ["donor", "receiver", "volunteer", "user"];
+  const isCompatibleUser = userRoles.includes(role) && userRoles.includes(allowedRole);
+
+  if (allowedRole && role !== allowedRole && !isCompatibleUser) {
+    // Otherwise, redirect to their default dashboard
+    const redirectPath = userRoles.includes(role) ? "/dashboard/user" : `/dashboard/${role}`;
+    return <Navigate to={redirectPath} replace />;
   }
 
   // If everything is OK → show the page

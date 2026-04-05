@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../../../api/api";
+import BackButton from "../../../components/BackButton";
+import ConfirmationModal from "../../../components/ConfirmationModal";
+import Pagination from "../../../components/Pagination";
+import "../../../components/ConfirmationModal.css";
 import "./Users.css";
 
 function Users() {
@@ -7,13 +11,26 @@ function Users() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const loggedInUserId = Number(localStorage.getItem("user_id"));
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (currentPage = 1) => {
     try {
-      const res = await api.get("/users/admin/users/");
-      setUsers(res.data);
+      setLoading(true);
+      const res = await api.get(`/users/admin/users/?page=${currentPage}`);
+      if (res.data.results) {
+        setUsers(res.data.results);
+        setTotalCount(res.data.count);
+      } else {
+        setUsers(res.data);
+        setTotalCount(res.data.length);
+      }
     } catch (err) {
       setError("Failed to load users");
     } finally {
@@ -22,8 +39,13 @@ function Users() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(page);
+  }, [page]);
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const toggleUserStatus = async (userId) => {
     try {
@@ -32,6 +54,29 @@ function Users() {
     } catch (err) {
       alert("Failed to update user status");
     }
+  };
+
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setIsModalOpen(true);
+  };
+
+  const deleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await api.delete(`/users/admin/users/${userToDelete.id}/delete/`);
+      fetchUsers();
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete user");
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setUserToDelete(null);
   };
 
   const donors = users.filter((u) => u.role === "donor");
@@ -59,6 +104,7 @@ function Users() {
 
   return (
     <div className="users-page">
+      <BackButton />
       <h1>User Management</h1>
       <p className="subtitle">Manage and monitor all system users</p>
 
@@ -84,25 +130,25 @@ function Users() {
 
       {/* FILTER BUTTONS */}
       <div className="filter-buttons">
-        <button 
+        <button
           className={`filter-btn ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
         >
           All ({users.length})
         </button>
-        <button 
+        <button
           className={`filter-btn ${filter === "donors" ? "active" : ""}`}
           onClick={() => setFilter("donors")}
         >
           Donors ({donors.length})
         </button>
-        <button 
+        <button
           className={`filter-btn ${filter === "receivers" ? "active" : ""}`}
           onClick={() => setFilter("receivers")}
         >
           Receivers ({receivers.length})
         </button>
-        <button 
+        <button
           className={`filter-btn ${filter === "volunteers" ? "active" : ""}`}
           onClick={() => setFilter("volunteers")}
         >
@@ -118,7 +164,8 @@ function Users() {
               <th>Username</th>
               <th>Email</th>
               <th>Role</th>
-              <th>Aadhaar Status</th>
+              <th>Rating</th>
+              <th>Verification Status</th>
               <th>Account Status</th>
               <th>Action</th>
             </tr>
@@ -135,8 +182,17 @@ function Users() {
                     {user.role.toUpperCase()}
                   </span>
                 </td>
-                <td className="aadhaar">
-                  {user.aadhaar_verified ? (
+                <td className="rating">
+                  {user.role === "volunteer" ? (
+                    <span className="rating-badge">
+                      ⭐ {user.profile?.rating || "0.0"}
+                    </span>
+                  ) : (
+                    <span className="text-muted">-</span>
+                  )}
+                </td>
+                <td className="verification">
+                  {user.is_verified ? (
                     <span className="badge-verified">✅ Verified</span>
                   ) : (
                     <span className="badge-not-verified">❌ Not Verified</span>
@@ -151,12 +207,22 @@ function Users() {
                 </td>
                 <td className="action">
                   {user.id !== loggedInUserId && (
-                    <button
-                      onClick={() => toggleUserStatus(user.id)}
-                      className={`btn-action ${user.is_active ? "btn-block" : "btn-unblock"}`}
-                    >
-                      {user.is_active ? "🚫 Block" : "✅ Unblock"}
-                    </button>
+                    <div className="action-buttons">
+                      <button
+                        onClick={() => toggleUserStatus(user.id)}
+                        className={`btn-action ${user.is_active ? "btn-block" : "btn-unblock"}`}
+                        title={user.is_active ? "Block User" : "Unblock User"}
+                      >
+                        {user.is_active ? "🚫" : "✅"}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(user)}
+                        className="btn-action btn-delete"
+                        title="Delete User"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -164,6 +230,21 @@ function Users() {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={page}
+        totalPages={Math.ceil(totalCount / 10)}
+        onPageChange={handlePageChange}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onConfirm={deleteUser}
+        title={`Delete User`}
+        message={`Are you sure you want to permanently delete user "${userToDelete?.username}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

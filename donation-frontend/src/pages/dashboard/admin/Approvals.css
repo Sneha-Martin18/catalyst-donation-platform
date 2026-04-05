@@ -117,6 +117,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -156,24 +157,28 @@
 
 /* Cards Grid */
 .cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 /* Approval Card */
 .approval-card {
   background: white;
   border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  padding: 15px 25px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  border-left: 4px solid #e0e0e0;
+  border-left: 6px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .approval-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  transform: translateX(5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
 .approval-card.pending {
@@ -194,12 +199,12 @@
 
 .card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 15px;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #f0f0f0;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  flex: 1.5;
 }
 
 .card-header h3 {
@@ -240,17 +245,22 @@
 
 /* Card Details */
 .card-details {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  flex: 2.5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
 }
 
 .card-details p {
   color: #666;
-  font-size: 0.95rem;
-  margin: 8px 0;
-  line-height: 1.5;
-  word-break: break-word;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .card-details strong {
@@ -258,25 +268,17 @@
   font-weight: 600;
 }
 
-/* Card Info */
 .card-info {
-  color: #059669;
-  background: #f0fdf4;
-  padding: 12px;
-  border-radius: 6px;
-  font-weight: 500;
+  margin-left: auto;
+  padding: 8px 15px;
+  font-size: 0.9rem;
 }
 
-.card-info p {
-  margin: 0;
-  color: #059669;
-}
-
-/* Card Actions */
 .card-actions {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .btn-approve,
@@ -392,6 +394,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -480,7 +483,13 @@
   }
 
   .cards-grid {
-    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .approval-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
   }
 
   .card-header {

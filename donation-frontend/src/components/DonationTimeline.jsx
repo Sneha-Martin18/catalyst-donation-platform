@@ -1,33 +1,57 @@
-function DonationTimeline({ status }) {
-  const steps = ["created", "verified", "assigned", "delivered"];
+function DonationTimeline({ status, compact = false }) {
+  const steps = ["Pending", "Verified", "Assigned", "Delivered"];
 
-  const statusOrder = {
-    pending: 0,      // created
-    verified: 1,     // verified
-    assigned: 2,     // assigned
-    delivered: 3,    // delivered
+  const statusMap = {
+    pending: 0,
+    verified: 1,
+    assigned: 2,
+    delivered: 3,
   };
 
-  const currentStepIndex = statusOrder[status];
+  const currentIndex = statusMap[status] !== undefined ? statusMap[status] : -1;
+
+  if (compact) {
+    return (
+      <div className="timeline-compact" style={{ display: 'flex', gap: '4px', marginTop: '12px', marginBottom: '12px' }}>
+        {steps.map((step, index) => {
+          const isActive = index <= currentIndex;
+          return (
+            <div
+              key={step}
+              title={step}
+              style={{
+                height: '6px',
+                flex: 1,
+                borderRadius: '4px',
+                backgroundColor: isActive ? '#10b981' : '#e5e7eb',
+                transition: 'background-color 0.3s'
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: "flex", gap: "12px", marginTop: "10px" }}>
+    <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: 'wrap' }}>
       {steps.map((step, index) => {
-        const isActive = index <= currentStepIndex;
-
+        const isActive = index <= currentIndex;
         return (
           <span
             key={step}
             style={{
-              padding: "6px 12px",
+              padding: "4px 10px",
               borderRadius: "20px",
-              backgroundColor: isActive ? "#22c55e" : "#e5e7eb",
-              color: isActive ? "white" : "#6b7280",
-              fontSize: "14px",
-              fontWeight: "500",
+              backgroundColor: isActive ? "#22c55e" : "#f3f4f6",
+              color: isActive ? "white" : "#9ca3af",
+              fontSize: "12px",
+              fontWeight: "600",
+              border: isActive ? "none" : "1px solid #e5e7eb",
+              transition: 'all 0.2s'
             }}
           >
-            {step.charAt(0).toUpperCase() + step.slice(1)}
+            {step}
           </span>
         );
       })}

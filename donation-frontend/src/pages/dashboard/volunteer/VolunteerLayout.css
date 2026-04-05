@@ -4,19 +4,30 @@
   background-color: #f5f6fa;
 }
 
-/* SIDEBAR */
+/* =========================
+   SIDEBAR
+========================= */
 .volunteer-sidebar {
   width: 250px;
-  background: linear-gradient(135deg, var(--mint-dark) 0%, var(--mint-accent) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--mint-dark) 0%,
+    var(--mint-accent) 100%
+  );
   color: white;
   padding: 30px 20px;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   height: 100vh;
-  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
 }
 
+/* =========================
+   HEADER
+========================= */
 .sidebar-header {
   margin-bottom: 30px;
   text-align: center;
@@ -36,16 +47,21 @@
   opacity: 0.9;
 }
 
+/* =========================
+   NAVIGATION
+========================= */
 .sidebar-nav {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
+/* shared style for links + logout button */
 .nav-link {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 14px 16px;
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
@@ -53,6 +69,10 @@
   margin-bottom: 8px;
   transition: all 0.3s ease;
   font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
 }
 
 .nav-link:hover {
@@ -67,33 +87,28 @@
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.nav-link .icon {
-  font-size: 1.2rem;
-  width: 24px;
-  text-align: center;
+/* LOGOUT specific styling */
+.logout-link {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.sidebar-footer {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
+.logout-link:hover {
+  background: rgba(255, 80, 80, 0.35);
 }
 
-.help-text {
-  margin: 0;
-  font-size: 0.85rem;
-  opacity: 0.75;
-  text-align: center;
-}
-
-/* MAIN CONTENT */
+/* =========================
+   MAIN CONTENT
+========================= */
 .volunteer-main {
   flex: 1;
   padding: 30px;
   overflow-y: auto;
 }
 
-/* Responsive Design */
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 768px) {
   .volunteer-layout {
     flex-direction: column;
@@ -109,22 +124,3 @@
     padding: 20px;
   }
 }
-
-/* Scrollbar Styling */
-.volunteer-sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.volunteer-sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.volunteer-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
-}
-
-.volunteer-sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-

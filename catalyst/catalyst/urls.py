@@ -33,4 +33,6 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
     path('api/delivery/', include('delivery.urls')),
     path('api/analytics/', include('analytics.urls')),
+    path('api/chatbot/', include('chatbot.urls')),
+    path('api/campaigns/', include('campaigns.urls')),
 ]
